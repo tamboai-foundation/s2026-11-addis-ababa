@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 import 'social_bridge.dart';
 
@@ -129,12 +129,12 @@ class VideoBridgeMock extends ChangeNotifier implements VideoBridge {
       feed().where((p) => p.authorId == userId).toList();
 
   @override
-  VideoPost publish({required String caption, String? videoPath}) {
+  VideoPost publish({required String caption, String? mediaPath}) {
     final post = VideoPost(
       id: _next++,
       authorId: mockMeId,
       caption: caption.trim(),
-      videoPath: videoPath ?? '',
+      mediaPath: mediaPath ?? '',
       time: DateTime.now(),
     );
     _posts.add(post);

@@ -41,12 +41,12 @@ interface AccountBridge {
     suspend fun deleteAccount()
 }
 
-/** Publication vidéo (M1 SI, module 3). `videoPath` vide : l'interface affiche une carte colorée à la place de la vidéo. */
+/** Publication (M1 SI, module 3) : média facultatif (photo ou vidéo) et légende. `mediaPath` vide : légende seule, affichée sur une carte colorée. */
 data class Post(
     val id: Long,
     val authorId: Int,
     val caption: String,
-    val videoPath: String,
+    val mediaPath: String,
     val time: Long,
     val edited: Boolean = false,
     /** Identifiants des utilisateurs qui ont aimé la publication. */
@@ -71,7 +71,7 @@ interface VideoBridge {
     /** Fil d'actualité : toutes les publications, la plus récente en premier. */
     val posts: StateFlow<List<Post>>
     fun comments(postId: Long): StateFlow<List<PostComment>>
-    fun publish(caption: String, videoPath: String?): Post
+    fun publish(caption: String, mediaPath: String?): Post
     fun editPost(postId: Long, caption: String)
     fun removePost(postId: Long)
     /** Aime ou n'aime plus (bascule) pour l'utilisateur connecté. */
@@ -184,8 +184,8 @@ class VideoBridgeMock : VideoBridge {
         flowOf(postId).value = notes.value.filter { it.postId == postId }.sortedBy { it.time }
     }
 
-    override fun publish(caption: String, videoPath: String?): Post {
-        val post = Post(nextId++, me, caption.trim(), videoPath ?: "", System.currentTimeMillis())
+    override fun publish(caption: String, mediaPath: String?): Post {
+        val post = Post(nextId++, me, caption.trim(), mediaPath ?: "", System.currentTimeMillis())
         feed.value = listOf(post) + feed.value
         return post
     }

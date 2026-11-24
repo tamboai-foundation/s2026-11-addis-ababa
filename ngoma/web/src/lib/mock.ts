@@ -173,7 +173,7 @@ export class VideoBridgeMock implements VideoBridge {
   constructor() {
     const now = Date.now()
     const post = (authorId: number, caption: string, ago: number, likes: number[]) =>
-      this.items.push({ id: this.nextId++, authorId, caption, videoUrl: '', time: now - ago, likes })
+      this.items.push({ id: this.nextId++, authorId, caption, mediaUrl: '', time: now - ago, likes })
     post(2, 'Ma première application de messagerie, étape par étape ✨', 3_600_000, [3, 4, 5])
     post(3, 'Un petit tour dans les coulisses de notre équipe 🎬', 7_200_000, [2])
     post(4, 'Astuce du jour : tester chaque écran avant de le montrer.', 20_000_000, [2, 3, 5, 6])
@@ -207,7 +207,9 @@ export class VideoBridgeMock implements VideoBridge {
   publish(input: { caption: string; file?: File }) {
     const post: Post = {
       id: this.nextId++, authorId: ME, caption: input.caption.trim(),
-      videoUrl: input.file ? URL.createObjectURL(input.file) : '', time: Date.now(), likes: [],
+      mediaUrl: input.file ? URL.createObjectURL(input.file) : '',
+      mediaType: input.file ? (input.file.type.startsWith('image/') ? 'image' : 'video') : undefined,
+      time: Date.now(), likes: [],
     }
     this.items.push(post)
     this.emit()

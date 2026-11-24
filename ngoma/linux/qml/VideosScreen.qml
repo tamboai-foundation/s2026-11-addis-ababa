@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 
 // Fil de vidéos façon TikTok (M1 SI, module 3) : défilement vertical page par page, publier, aimer, commenter,
-// modifier et supprimer ses vidéos. La lecture vidéo n'est pas incluse : à ajouter avec Qt Multimedia sur `videoPath`.
+// modifier et supprimer ses vidéos. La lecture vidéo n'est pas incluse : à ajouter avec Qt Multimedia sur `mediaPath` (les photos sont affichées).
 Rectangle {
     id: videos
     color: "black"
@@ -12,6 +12,10 @@ Rectangle {
     property bool mineOnly: false
     property int commentsFor: 0
     readonly property var gradients: [["#F43F5E", "#FB923C"], ["#4F46E5", "#38BDF8"], ["#059669", "#A3E635"], ["#C026D3", "#F472B6"], ["#1E293B", "#64748B"]]
+
+    function isImage(path) {
+        return /\.(jpe?g|png|gif|webp|bmp)$/i.test(path)
+    }
 
     function fileName(path) {
         var i = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))
@@ -41,12 +45,20 @@ Rectangle {
                 anchors.centerIn: parent
                 width: parent.width - 200
                 spacing: 8
+                Image {
+                    width: parent.width
+                    height: visible ? Math.min(implicitHeight, 420) : 0
+                    visible: page.modelData.mediaPath !== "" && videos.isImage(page.modelData.mediaPath)
+                    source: visible ? page.modelData.mediaPath : ""
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                }
                 Label {
                     width: parent.width
                     horizontalAlignment: Text.AlignHCenter
-                    visible: page.modelData.videoPath !== ""
+                    visible: page.modelData.mediaPath !== "" && !videos.isImage(page.modelData.mediaPath)
                     color: "white"
-                    text: "🎬 " + videos.fileName(page.modelData.videoPath)
+                    text: "🎬 " + videos.fileName(page.modelData.mediaPath)
                 }
                 Label {
                     width: parent.width
@@ -55,7 +67,7 @@ Rectangle {
                     color: "white"
                     font.pixelSize: 28
                     font.bold: true
-                    text: page.modelData.caption !== "" ? page.modelData.caption : "▶"
+                    text: page.modelData.caption
                 }
             }
 
@@ -134,7 +146,7 @@ Rectangle {
         visible: feed.count === 0
         color: "white"
         opacity: 0.8
-        text: videos.mineOnly ? "Vous n'avez rien publié pour l'instant." : "Aucune vidéo pour le moment."
+        text: videos.mineOnly ? "Vous n'avez rien publié pour l'instant." : "Aucune publication pour le moment."
     }
 
     // Barre du haut : Pour vous / Mes vidéos / + Publier
@@ -160,7 +172,7 @@ Rectangle {
             text: "+ Publier"
             palette.button: Theme.brand
             palette.buttonText: "white"
-            onClicked: { publishCaption.text = ""; publishDialog.videoPath = ""; publishDialog.open() }
+            onClicked: { publishCaption.text = ""; publishDialog.mediaPath = ""; publishDialog.open() }
         }
     }
 
@@ -271,14 +283,14 @@ Rectangle {
 
     FileDialog {
         id: videoFile
-        title: "Choisir une vidéo"
-        nameFilters: ["Vidéos (*.mp4 *.mov *.mkv *.webm *.avi)", "Tous les fichiers (*)"]
-        onAccepted: publishDialog.videoPath = selectedFile.toString()
+        title: "Choisir une photo ou une vidéo"
+        nameFilters: ["Photos et vidéos (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.mp4 *.mov *.mkv *.webm *.avi)", "Tous les fichiers (*)"]
+        onAccepted: publishDialog.mediaPath = selectedFile.toString()
     }
 
     Popup {
         id: publishDialog
-        property string videoPath: ""
+        property string mediaPath: ""
         anchors.centerIn: parent
         width: 420
         modal: true
@@ -286,10 +298,10 @@ Rectangle {
         background: Rectangle { color: Theme.surface; radius: 20 }
         contentItem: ColumnLayout {
             spacing: 12
-            Label { text: "Publier une vidéo"; font.pixelSize: 20; font.bold: true }
+            Label { text: "Publier"; font.pixelSize: 20; font.bold: true }
             Button {
                 Layout.fillWidth: true
-                text: publishDialog.videoPath !== "" ? "🎬 " + videos.fileName(publishDialog.videoPath) : "Choisir un fichier vidéo"
+                text: publishDialog.mediaPath !== "" ? "🎬 " + videos.fileName(publishDialog.mediaPath) : "Ajouter une photo ou une vidéo (facultatif)"
                 onClicked: videoFile.open()
             }
             TextField { id: publishCaption; Layout.fillWidth: true; placeholderText: "Légende" }
@@ -298,9 +310,9 @@ Rectangle {
                 Button { flat: true; text: "Annuler"; onClicked: publishDialog.close() }
                 Button {
                     text: "Publier"
-                    enabled: publishDialog.videoPath !== "" || publishCaption.text.trim() !== ""
+                    enabled: publishDialog.mediaPath !== "" || publishCaption.text.trim() !== ""
                     onClicked: {
-                        MockBridge.publish(publishCaption.text, publishDialog.videoPath)
+                        MockBridge.publish(publishCaption.text, publishDialog.mediaPath)
                         publishDialog.close()
                         videos.mineOnly = false
                         feed.positionViewAtBeginning()

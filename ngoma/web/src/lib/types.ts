@@ -53,12 +53,14 @@ export interface MessagingBridge {
   createConversation(title: string): number
 }
 
-/** Publication vidéo (M1 SI, module 3). `videoUrl` vide : l'interface affiche une carte colorée à la place de la vidéo. */
+/** Publication (M1 SI, module 3) : média facultatif (photo ou vidéo) et légende. `mediaUrl` vide : légende seule, affichée sur une carte colorée. */
 export type Post = {
   id: number
   authorId: number
   caption: string
-  videoUrl: string
+  mediaUrl: string
+  /** Type du média (`image` ou `video`) ; absent si `mediaUrl` est vide. */
+  mediaType?: 'image' | 'video'
   time: number
   edited?: boolean
   /** Identifiants des utilisateurs qui ont aimé la publication. */

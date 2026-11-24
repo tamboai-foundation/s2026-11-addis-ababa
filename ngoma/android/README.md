@@ -13,7 +13,7 @@ Build vérifié : `flutter build apk --debug`.
 Barre d'onglets en bas : **Messages**, **Vidéos**, **Personnes**, **Profil**.
 1. **Gestion des utilisateurs** : inscription / connexion, **Personnes** (liste, recherche, profil d'une personne, écrire un message), **Profil** (modifier son nom et sa description, voir ses vidéos, se déconnecter, supprimer son compte).
 2. **Conversations et messages** : la messagerie complète déjà présente (inbox, conversation, envoi, réponse, modification, suppression, réactions).
-3. **Publications vidéo et interactions**, façon TikTok : **Vidéos** (fil à défilement vertical, lecture de la vidéo publiée), publier (vidéo de la galerie + légende), modifier la légende, supprimer, j'aime, commentaires et réponses (aimer, modifier, supprimer les siens), publications des autres, onglet « Mes vidéos ».
+3. **Publications vidéo et interactions**, façon TikTok : **Vidéos** (fil à défilement vertical, affichage de la photo ou lecture de la vidéo publiée), publier (photo ou vidéo de la galerie, facultatives, + légende ; une légende seule est acceptée), modifier la légende, supprimer, j'aime, commentaires et réponses (aimer, modifier, supprimer les siens), publications des autres, onglet « Mes vidéos ».
 
 Code des nouveaux écrans : `lib/features/social/` ; modèles et ponts : `lib/core/platform/social/` (`UsersBridge`, `VideoBridge` et leurs mocks).
 
@@ -24,7 +24,7 @@ Code des nouveaux écrans : `lib/features/social/` ; modèles et ponts : `lib/co
 Pour passer à TModeler : implémenter `AccountBridge` / `MessagingBridge` avec TModeler et changer les providers.
 - Utilisateurs et vidéos : `lib/core/platform/social/social_bridge.dart` (`UsersBridge`, `VideoBridge`, providers `usersBridgeProvider` / `videoBridgeProvider`), mocks dans `social_bridge_mock.dart`.
 
-Les écrans ne changent pas : votre travail est de **concevoir vos modèles TModeler** (utilisateur, conversation, message, publication, commentaire, j'aime) puis d'écrire les implémentations des interfaces à partir de ces modèles. Les vidéos choisies dans l'interface sont des fichiers : à enregistrer comme médias TModeler.
+Les écrans ne changent pas : votre travail est de **concevoir vos modèles TModeler** (utilisateur, conversation, message, publication, commentaire, j'aime) puis d'écrire les implémentations des interfaces à partir de ces modèles. Les photos et vidéos choisies dans l'interface sont des fichiers : à enregistrer comme médias TModeler.
 
 ## TModeler
 - Dépendance Maven Central : `co.tamboai:TModeler:1.0.1` (`android/app/build.gradle.kts`).

@@ -191,15 +191,20 @@ class _VideoPage extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (post.videoPath.isNotEmpty)
-          _PostVideo(path: post.videoPath, active: active)
+        if (post.hasMedia && post.isImage)
+          ColoredBox(
+            color: Colors.black,
+            child: Image.file(File(post.mediaPath), fit: BoxFit.contain),
+          )
+        else if (post.hasMedia)
+          _PostVideo(path: post.mediaPath, active: active)
         else
           Container(
             decoration: BoxDecoration(gradient: postGradient(post.id)),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              post.caption.isEmpty ? '▶' : post.caption,
+              post.caption,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w800),
             ),
@@ -233,7 +238,7 @@ class _VideoPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                if (post.videoPath.isNotEmpty && post.caption.isNotEmpty)
+                if (post.hasMedia && post.caption.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(post.caption, style: const TextStyle(color: Colors.white)),
@@ -559,7 +564,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
   }
 }
 
-/// Publier une vidéo : choisir un fichier vidéo dans la galerie, écrire une légende, publier.
+/// Publier : photo ou vidéo de la galerie (facultatif) et/ou une légende ; une légende seule est acceptée.
 class PublishScreen extends ConsumerStatefulWidget {
   const PublishScreen({super.key});
 
@@ -578,7 +583,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
   }
 
   Future<void> _pick() async {
-    final file = await ImagePicker().pickVideo(source: ImageSource.gallery);
+    final file = await ImagePicker().pickMedia();
     if (file != null) setState(() => _path = file.path);
   }
 
@@ -586,14 +591,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
   Widget build(BuildContext context) {
     final canPublish = _path != null || _caption.text.trim().isNotEmpty;
     return Scaffold(
-      appBar: AppBar(title: const Text('Publier une vidéo')),
+      appBar: AppBar(title: const Text('Publier')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           OutlinedButton.icon(
             onPressed: _pick,
-            icon: const Icon(Icons.video_library_outlined),
-            label: Text(_path == null ? 'Choisir une vidéo' : _path!.split(RegExp(r'[\\/]')).last),
+            icon: const Icon(Icons.perm_media_outlined),
+            label: Text(_path == null ? 'Ajouter une photo ou une vidéo (facultatif)' : _path!.split(RegExp(r'[\\/]')).last),
           ),
           const SizedBox(height: 14),
           TextField(
@@ -611,7 +616,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
             ),
             onPressed: canPublish
                 ? () {
-                    ref.read(videoBridgeProvider).publish(caption: _caption.text, videoPath: _path);
+                    ref.read(videoBridgeProvider).publish(caption: _caption.text, mediaPath: _path);
                     Navigator.of(context).pop(true);
                   }
                 : null,

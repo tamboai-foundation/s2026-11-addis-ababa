@@ -1,4 +1,4 @@
-/// Modèles d'interface du Module 1 SI (utilisateurs, publications vidéo, commentaires).
+﻿/// Modèles d'interface du Module 1 SI (utilisateurs, publications vidéo, commentaires).
 /// Ce sont les objets que les écrans affichent : à alimenter depuis VOS modèles TModeler.
 library;
 
@@ -23,14 +23,17 @@ class SocialUser {
   );
 }
 
-/// Publication vidéo. `videoPath` vide : l'interface affiche une carte colorée à la place de la vidéo.
+/// Publication : un média facultatif (photo ou vidéo) et une légende. `mediaPath` vide : légende seule, affichée sur une carte colorée.
 class VideoPost {
   final int id;
   final int authorId;
   final String caption;
-  final String videoPath;
+  final String mediaPath;
   final DateTime time;
   final bool edited;
+
+  bool get hasMedia => mediaPath.isNotEmpty;
+  bool get isImage => RegExp(r'\.(jpe?g|png|gif|webp|bmp|heic)$', caseSensitive: false).hasMatch(mediaPath);
 
   /// Identifiants des utilisateurs qui ont aimé la publication.
   final Set<int> likes;
@@ -39,7 +42,7 @@ class VideoPost {
     required this.id,
     required this.authorId,
     required this.caption,
-    this.videoPath = '',
+    this.mediaPath = '',
     required this.time,
     this.edited = false,
     this.likes = const {},
@@ -50,7 +53,7 @@ class VideoPost {
         id: id,
         authorId: authorId,
         caption: caption ?? this.caption,
-        videoPath: videoPath,
+        mediaPath: mediaPath,
         time: time,
         edited: edited ?? this.edited,
         likes: likes ?? this.likes,

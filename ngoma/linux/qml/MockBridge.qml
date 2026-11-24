@@ -133,15 +133,15 @@ QtObject {
     function deleteAccount() { logout() }
 
     // --- Publications vidéo (M1 SI, module 3) ---
-    // videoPath vide : l'interface affiche une carte colorée à la place de la vidéo.
+    // mediaPath (photo ou vidéo) est facultatif : vide, la légende seule est affichée sur une carte colorée.
     property var posts: {
         var now = Date.now()
         return [
-            { id: 1001, authorId: 2, caption: "Ma première application de messagerie, étape par étape ✨", videoPath: "", time: now - 3600000, edited: false, likes: [3, 4, 5] },
-            { id: 1002, authorId: 3, caption: "Un petit tour dans les coulisses de notre équipe 🎬", videoPath: "", time: now - 7200000, edited: false, likes: [2] },
-            { id: 1003, authorId: 4, caption: "Astuce du jour : tester chaque écran avant de le montrer.", videoPath: "", time: now - 20000000, edited: false, likes: [2, 3, 5, 6] },
-            { id: 1004, authorId: 5, caption: "Pourquoi on chiffre les messages ? Explication en 30 secondes.", videoPath: "", time: now - 90000000, edited: false, likes: [] },
-            { id: 1005, authorId: 6, caption: "Bienvenue sur NGoma 👋", videoPath: "", time: now - 180000000, edited: false, likes: [2, 3] }
+            { id: 1001, authorId: 2, caption: "Ma première application de messagerie, étape par étape ✨", mediaPath: "", time: now - 3600000, edited: false, likes: [3, 4, 5] },
+            { id: 1002, authorId: 3, caption: "Un petit tour dans les coulisses de notre équipe 🎬", mediaPath: "", time: now - 7200000, edited: false, likes: [2] },
+            { id: 1003, authorId: 4, caption: "Astuce du jour : tester chaque écran avant de le montrer.", mediaPath: "", time: now - 20000000, edited: false, likes: [2, 3, 5, 6] },
+            { id: 1004, authorId: 5, caption: "Pourquoi on chiffre les messages ? Explication en 30 secondes.", mediaPath: "", time: now - 90000000, edited: false, likes: [] },
+            { id: 1005, authorId: 6, caption: "Bienvenue sur NGoma 👋", mediaPath: "", time: now - 180000000, edited: false, likes: [2, 3] }
         ]
     }
     property var comments: {
@@ -156,8 +156,8 @@ QtObject {
 
     function feed() { return posts.slice().sort(function (a, b) { return b.time - a.time }) }
     function userPosts(userId) { return feed().filter(function (p) { return p.authorId === userId }) }
-    function publish(caption, videoPath) {
-        posts = posts.concat([{ id: nextPostId++, authorId: me, caption: caption.trim(), videoPath: videoPath || "", time: Date.now(), edited: false, likes: [] }])
+    function publish(caption, mediaPath) {
+        posts = posts.concat([{ id: nextPostId++, authorId: me, caption: caption.trim(), mediaPath: mediaPath || "", time: Date.now(), edited: false, likes: [] }])
     }
     function _patchPost(id, f) { posts = posts.map(function (p) { return p.id === id ? f(p) : p }) }
     function editPost(id, caption) {

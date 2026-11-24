@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ngoma/core/providers/user_provider.dart';
 
@@ -26,7 +26,7 @@ abstract class VideoBridge implements Listenable {
   /// Fil d'actualité : toutes les publications, la plus récente en premier.
   List<VideoPost> feed();
   List<VideoPost> userPosts(int userId);
-  VideoPost publish({required String caption, String? videoPath});
+  VideoPost publish({required String caption, String? mediaPath});
   void editPost(int postId, String caption);
   void removePost(int postId);
 

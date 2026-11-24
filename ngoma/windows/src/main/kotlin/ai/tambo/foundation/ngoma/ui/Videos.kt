@@ -2,6 +2,7 @@ package ai.tambo.foundation.ngoma.ui
 
 import ai.tambo.foundation.ngoma.bridge.*
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -18,6 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -62,7 +66,7 @@ internal fun PostMiniature(post: Post, modifier: Modifier = Modifier) {
 /**
  * Fil de vidéos façon TikTok (M1 SI, module 3) : défilement vertical page par page, publier, aimer, commenter,
  * modifier et supprimer ses vidéos. La lecture vidéo n'est pas incluse (aucun lecteur dans Compose Desktop) :
- * à ajouter avec la bibliothèque de votre choix (vlcj, JavaFX Media…) sur `Post.videoPath`.
+ * à ajouter avec la bibliothèque de votre choix (vlcj, JavaFX Media…) sur `Post.mediaPath` (les photos sont affichées).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -78,8 +82,8 @@ fun VideosScreen(account: AccountBridge, video: VideoBridge) {
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         if (shown.isEmpty()) {
             Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(if (mineOnly) "Vous n'avez rien publié pour l'instant." else "Aucune vidéo pour le moment.", color = Color.White.copy(alpha = 0.8f))
-                Button(onClick = { publishing = true }, shape = RoundedCornerShape(50)) { Text("Publier une vidéo") }
+                Text(if (mineOnly) "Vous n'avez rien publié pour l'instant." else "Aucune publication pour le moment.", color = Color.White.copy(alpha = 0.8f))
+                Button(onClick = { publishing = true }, shape = RoundedCornerShape(50)) { Text("Publier") }
             }
         } else {
             LazyColumn(Modifier.fillMaxSize(), state = listState, flingBehavior = rememberSnapFlingBehavior(listState)) {
@@ -132,11 +136,16 @@ private fun PostPage(post: Post, author: String, video: VideoBridge, onComments:
 
     Box(modifier.background(Brush.linearGradient(listOf(a, b)))) {
         Column(Modifier.align(Alignment.Center).padding(horizontal = 80.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (post.videoPath.isNotBlank()) {
-                Text("🎬 ${File(post.videoPath).name}", color = Color.White, fontSize = 16.sp)
+            if (post.mediaPath.isNotBlank()) {
+                val image = remember(post.mediaPath) { loadPhoto(post.mediaPath) }
+                if (image != null) {
+                    Image(image, null, Modifier.heightIn(max = 480.dp), contentScale = ContentScale.Fit)
+                } else {
+                    Text("🎬 ${File(post.mediaPath).name}", color = Color.White, fontSize = 16.sp)
+                }
                 Spacer(Modifier.height(8.dp))
             }
-            Text(post.caption.ifBlank { "▶" }, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
+            Text(post.caption, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold, textAlign = TextAlign.Center)
         }
         Column(
             Modifier.align(Alignment.BottomStart).fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)))).padding(start = 20.dp, end = 100.dp, top = 24.dp, bottom = 24.dp),
@@ -263,21 +272,27 @@ private fun CommentsPanel(postId: Long, account: AccountBridge, video: VideoBrid
     }
 }
 
-/** Publier une vidéo : choisir un fichier vidéo, écrire une légende, publier. */
+/** Photo décodée si le fichier est une image (null pour une vidéo ou un fichier illisible). */
+private fun loadPhoto(path: String): ImageBitmap? {
+    if (!Regex("(?i).*\\.(jpe?g|png|gif|webp|bmp)$").matches(path)) return null
+    return runCatching { File(path).inputStream().use { loadImageBitmap(it) } }.getOrNull()
+}
+
+/** Publier : photo ou vidéo (facultatif) et/ou légende ; une légende seule est acceptée. */
 @Composable
 private fun PublishDialog(onDismiss: () -> Unit, onPublish: (caption: String, path: String?) -> Unit) {
     var caption by remember { mutableStateOf("") }
     var path by remember { mutableStateOf<String?>(null) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Publier une vidéo") },
+        title = { Text("Publier") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = {
-                    val dialog = FileDialog(null as Frame?, "Choisir une vidéo", FileDialog.LOAD)
+                    val dialog = FileDialog(null as Frame?, "Choisir une photo ou une vidéo", FileDialog.LOAD)
                     dialog.isVisible = true
                     if (dialog.file != null) path = File(dialog.directory, dialog.file).absolutePath
-                }) { Text(path?.let { "🎬 " + File(it).name } ?: "Choisir un fichier vidéo") }
+                }) { Text(path?.let { "🎬 " + File(it).name } ?: "Ajouter une photo ou une vidéo (facultatif)") }
                 OutlinedTextField(caption, { caption = it }, label = { Text("Légende") }, modifier = Modifier.fillMaxWidth())
             }
         },

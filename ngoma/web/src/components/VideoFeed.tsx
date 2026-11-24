@@ -20,7 +20,7 @@ export function timeAgo(t: number) {
 
 const authorName = (id: number) => accountBridge.user(id)?.name ?? 'Utilisateur'
 
-/** Vidéo de la publication ; sans fichier vidéo (mock), une carte colorée avec la légende. */
+/** Photo ou vidéo de la publication ; sans média (légende seule), une carte colorée avec la légende. */
 function PostMedia({ post, active }: { post: Post; active: boolean }) {
   const ref = useRef<HTMLVideoElement>(null)
   useEffect(() => {
@@ -29,12 +29,15 @@ function PostMedia({ post, active }: { post: Post; active: boolean }) {
     if (active) void v.play().catch(() => undefined)
     else v.pause()
   }, [active])
-  if (post.videoUrl) {
-    return <video ref={ref} src={post.videoUrl} className="absolute inset-0 w-full h-full object-contain bg-black" loop muted playsInline controls={false} />
+  if (post.mediaUrl && post.mediaType === 'image') {
+    return <img src={post.mediaUrl} alt="" className="absolute inset-0 w-full h-full object-contain bg-black" />
+  }
+  if (post.mediaUrl) {
+    return <video ref={ref} src={post.mediaUrl} className="absolute inset-0 w-full h-full object-contain bg-black" loop muted playsInline controls={false} />
   }
   return (
     <div className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS[post.id % GRADIENTS.length]} flex items-center justify-center p-10`}>
-      <p className="text-white/95 text-2xl md:text-3xl font-extrabold text-center leading-snug drop-shadow">{post.caption || '▶'}</p>
+      <p className="text-white/95 text-2xl md:text-3xl font-extrabold text-center leading-snug drop-shadow">{post.caption}</p>
     </div>
   )
 }
@@ -43,9 +46,10 @@ function PostMedia({ post, active }: { post: Post; active: boolean }) {
 export function PostMiniature({ post }: { post: Post }) {
   return (
     <div className={`aspect-[9/14] rounded-2xl overflow-hidden relative bg-gradient-to-br ${GRADIENTS[post.id % GRADIENTS.length]}`}>
-      {post.videoUrl && <video src={post.videoUrl} className="absolute inset-0 w-full h-full object-cover" muted playsInline />}
+      {post.mediaUrl && post.mediaType === 'image' && <img src={post.mediaUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+      {post.mediaUrl && post.mediaType !== 'image' && <video src={post.mediaUrl} className="absolute inset-0 w-full h-full object-cover" muted playsInline />}
       <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent text-white text-xs">
-        <p className="line-clamp-2 font-semibold">{post.caption || 'Vidéo'}</p>
+        <p className="line-clamp-2 font-semibold">{post.caption || (post.mediaType === 'image' ? 'Photo' : 'Vidéo')}</p>
         <p className="opacity-80">❤️ {post.likes.length}</p>
       </div>
     </div>
@@ -86,8 +90,8 @@ export default function VideoFeed() {
       <div ref={root} className="h-full overflow-y-scroll snap-y snap-mandatory">
         {posts.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center gap-3 text-white/80">
-            <p>{mineOnly ? "Vous n'avez rien publié pour l'instant." : 'Aucune vidéo pour le moment.'}</p>
-            <button className="rounded-full bg-brand px-5 py-2 font-bold text-white" onClick={() => setPublishing(true)}>Publier une vidéo</button>
+            <p>{mineOnly ? "Vous n'avez rien publié pour l'instant." : 'Aucune publication pour le moment.'}</p>
+            <button className="rounded-full bg-brand px-5 py-2 font-bold text-white" onClick={() => setPublishing(true)}>Publier</button>
           </div>
         )}
         {posts.map((p) => (
@@ -126,8 +130,8 @@ function PostCard({ post, active, onComments }: { post: Post; active: boolean; o
           <span className="font-bold">{authorName(post.authorId)}</span>
           <span className="text-xs opacity-70">{timeAgo(post.time)}</span>
         </div>
-        {post.videoUrl && post.caption && <p className="text-sm">{post.caption}{post.edited ? ' (modifié)' : ''}</p>}
-        {!post.videoUrl && post.edited && <p className="text-xs opacity-70">modifié</p>}
+        {post.mediaUrl && post.caption && <p className="text-sm">{post.caption}{post.edited ? ' (modifié)' : ''}</p>}
+        {!post.mediaUrl && post.edited && <p className="text-xs opacity-70">modifié</p>}
       </div>
       <div className="absolute right-3 bottom-24 flex flex-col items-center gap-5 text-white">
         <button className="flex flex-col items-center" onClick={() => videoBridge.toggleLike(post.id)} aria-label="J'aime">
@@ -244,7 +248,7 @@ function CommentRow({ c, onReply, onEdit }: { c: PostComment; onReply: () => voi
   )
 }
 
-/** Publier une vidéo : choisir un fichier vidéo, écrire une légende, publier. */
+/** Publier : photo ou vidéo (facultatif) et/ou légende ; une légende seule est acceptée. */
 function PublishDialog({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [caption, setCaption] = useState('')
@@ -259,10 +263,14 @@ function PublishDialog({ onClose, onDone }: { onClose: () => void; onDone: () =>
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className="bg-white rounded-3xl w-full max-w-md p-6 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
-        <h3 className="text-xl font-extrabold">Publier une vidéo</h3>
+        <h3 className="text-xl font-extrabold">Publier</h3>
         <label className="rounded-2xl border-2 border-dashed border-hairline aspect-video flex items-center justify-center text-secondary text-sm cursor-pointer overflow-hidden bg-page">
-          {preview ? <video src={preview} className="w-full h-full object-contain bg-black" muted controls /> : 'Choisir un fichier vidéo'}
-          <input type="file" accept="video/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+          {preview
+            ? (file?.type.startsWith('image/')
+              ? <img src={preview} alt="" className="w-full h-full object-contain bg-black" />
+              : <video src={preview} className="w-full h-full object-contain bg-black" muted controls />)
+            : 'Ajouter une photo ou une vidéo (facultatif)'}
+          <input type="file" accept="image/*,video/*" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </label>
         <textarea
           className="w-full rounded-xl border border-hairline px-4 py-3 text-sm outline-none focus:border-brand"
