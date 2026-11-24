@@ -1,4 +1,5 @@
 #include <QGuiApplication>
+#include <QIcon>
 #include <QQmlApplicationEngine>
 #include <QQuickStyle>
 
@@ -9,6 +10,7 @@ int main(int argc, char *argv[])
     initTModeler();
 
     QGuiApplication app(argc, argv);
+    app.setWindowIcon(QIcon(":/ngoma.png"));
     QQuickStyle::setStyle("Basic");
 
     // ViewModel d'exemple, utilisable en QML : import models 1.0

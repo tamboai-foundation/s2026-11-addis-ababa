@@ -8,6 +8,17 @@ Rectangle {
     signal logout()
 
     property int selectedId: 0
+    // « Écrire un message » depuis l'écran Personnes : ouvre la conversation de cette personne (la crée si besoin).
+    property string openChatWith: ""
+    signal chatOpened()
+    onOpenChatWithChanged: {
+        if (openChatWith === "") return
+        var found = null
+        for (var i = 0; i < MockBridge.conversations.length; i++)
+            if (MockBridge.conversations[i].title === openChatWith) found = MockBridge.conversations[i]
+        selectedId = found ? found.id : MockBridge.createConversation(openChatWith)
+        chatOpened()
+    }
     property string filter: "Toutes"
     property string query: ""
     readonly property var filters: ["Toutes", "Non lues", "Épinglées", "Archivées"]

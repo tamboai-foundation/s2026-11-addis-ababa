@@ -1,7 +1,7 @@
 pragma Singleton
 import QtQuick
 
-// Charte NGoma : rouge en couleur principale (base Wouanda).
+// Charte NGoma : rouge en couleur principale (base NGoma).
 QtObject {
     readonly property color brand: "#E0262D"
     readonly property color brandDark: "#B71C22"

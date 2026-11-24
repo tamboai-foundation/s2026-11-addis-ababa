@@ -4,6 +4,7 @@ Projet de départ Foundation. Module QML / package : `ai.tambo.foundation.ngoma`
 
 ## Prérequis
 Qt 6.8+ (Core, Quick, QuickControls2), CMake 3.16+, un compilateur C++20, git (FetchContent).
+Au lancement, Qt 6.5+ demande `libxcb-cursor0` (Ubuntu/WSL : `sudo apt install libxcb-cursor0`).
 
 ## Construire et lancer
 ```
@@ -13,12 +14,17 @@ cmake --build build
 ```
 TModeler C++ est récupéré par FetchContent (`https://github.com/TTT-GH/TModeler.git`, branche `main`, sous-dossier `cpp`), comme dans `cpp/tests/qtcreator`.
 
-## Écrans
-Splash de chargement, connexion / inscription, liste des conversations (recherche, filtres, épingler, sourdine, archiver), conversation (envoi, réponse, modification, suppression, réactions).
+## Écrans (de quoi réaliser le Module 1 SI)
+Barre d'onglets à gauche : **Messages**, **Vidéos**, **Personnes**, **Profil**.
+1. **Gestion des utilisateurs** : inscription / connexion, **Personnes** (liste, recherche, profil d'une personne, écrire un message), **Profil** (modifier son nom et sa description, voir ses vidéos, se déconnecter, supprimer son compte).
+2. **Conversations et messages** : liste des conversations (recherche, filtres, épingler, sourdine, archiver), conversation (envoi, réponse, modification, suppression, réactions).
+3. **Publications vidéo et interactions**, façon TikTok : **Vidéos** (fil à défilement vertical page par page), publier (choix d'un fichier vidéo + légende), modifier la légende, supprimer, j'aime, commentaires et réponses (aimer, modifier, supprimer les siens), publications des autres, onglet « Mes vidéos ». La lecture de la vidéo n'est pas incluse : à ajouter avec Qt Multimedia (`MediaPlayer` / `VideoOutput`) sur `videoPath`.
 
 ## Mocks (niveau ui-bridge-TModeler)
 `qml/MockBridge.qml` : singleton QML (compte + messagerie, tout identifiant est accepté). Toute l'UI passe par lui.
 Pour passer à TModeler : fournir un pont avec les mêmes propriétés et fonctions, adossé aux `TViewModel`.
+
+Les écrans ne changent pas : votre travail est de **concevoir vos modèles TModeler** (utilisateur, conversation, message, publication, commentaire, j'aime) puis de fournir un pont (mêmes propriétés et fonctions que `MockBridge.qml`) adossé à ces modèles. Les vidéos choisies dans l'interface sont des fichiers : à enregistrer comme médias TModeler.
 
 ## TModeler
 - Init et modèle d'exemple : `src/models.h` / `src/models.cpp` (`Note`, `initTModeler()`).

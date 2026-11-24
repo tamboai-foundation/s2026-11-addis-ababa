@@ -10,11 +10,11 @@ QtObject {
     property var user: null          // { id, name } ou null
     function restoreSession() { return user }
     function login(identifier, password) {
-        user = { id: 1, name: identifier.trim() || "Moi" }
+        user = { id: 1, name: identifier.trim() || "Moi", bio: "", joinedAt: Date.now() }
         return user
     }
     function register(name, identifier, password) {
-        user = { id: 1, name: name.trim() || "Moi" }
+        user = { id: 1, name: name.trim() || "Moi", bio: "", joinedAt: Date.now() }
         return user
     }
     function logout() { user = null }
@@ -93,6 +93,100 @@ QtObject {
         conversations = conversations.concat([{ id: id, title: title, unread: 0, pinned: false, muted: false, archived: false }])
         return id
     }
+
+    // --- Gestion des utilisateurs (M1 SI, module 1) ---
+    readonly property var others: {
+        var now = Date.now()
+        return [
+            { id: 2, name: "Awa Traoré", bio: "Développeuse mobile, Bamako.", joinedAt: now - 30 * 86400000 },
+            { id: 3, name: "Kofi Mensah", bio: "Design et vidéo, Accra.", joinedAt: now - 20 * 86400000 },
+            { id: 4, name: "Fatou Diop", bio: "Étudiante en informatique, Dakar.", joinedAt: now - 12 * 86400000 },
+            { id: 5, name: "Moussa Keita", bio: "Cybersécurité.", joinedAt: now - 5 * 86400000 },
+            { id: 6, name: "Aïcha Bello", bio: "Passionnée de musique et de code.", joinedAt: now - 2 * 86400000 }
+        ]
+    }
+    // Tous les utilisateurs (moi en premier), filtrés par la recherche (nom ou description)
+    function users(query) {
+        var all = (user ? [user] : []).concat(others)
+        var q = (query || "").toLowerCase()
+        return all.filter(function (u) {
+            return !q || u.name.toLowerCase().indexOf(q) >= 0 || (u.bio || "").toLowerCase().indexOf(q) >= 0
+        })
+    }
+    function userById(id) {
+        var all = (user ? [user] : []).concat(others)
+        for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i]
+        return null
+    }
+    function timeAgo(t) {
+        var s = Math.max(1, Math.round((Date.now() - t) / 1000))
+        if (s < 60) return "à l'instant"
+        if (s < 3600) return "il y a " + Math.round(s / 60) + " min"
+        if (s < 86400) return "il y a " + Math.round(s / 3600) + " h"
+        return "il y a " + Math.round(s / 86400) + " j"
+    }
+    function authorName(id) { var u = userById(id); return u ? u.name : "Utilisateur" }
+    function updateProfile(name, bio) {
+        if (!user) return
+        user = Object.assign({}, user, { name: name.trim() || user.name, bio: bio.trim() })
+    }
+    function deleteAccount() { logout() }
+
+    // --- Publications vidéo (M1 SI, module 3) ---
+    // videoPath vide : l'interface affiche une carte colorée à la place de la vidéo.
+    property var posts: {
+        var now = Date.now()
+        return [
+            { id: 1001, authorId: 2, caption: "Ma première application de messagerie, étape par étape ✨", videoPath: "", time: now - 3600000, edited: false, likes: [3, 4, 5] },
+            { id: 1002, authorId: 3, caption: "Un petit tour dans les coulisses de notre équipe 🎬", videoPath: "", time: now - 7200000, edited: false, likes: [2] },
+            { id: 1003, authorId: 4, caption: "Astuce du jour : tester chaque écran avant de le montrer.", videoPath: "", time: now - 20000000, edited: false, likes: [2, 3, 5, 6] },
+            { id: 1004, authorId: 5, caption: "Pourquoi on chiffre les messages ? Explication en 30 secondes.", videoPath: "", time: now - 90000000, edited: false, likes: [] },
+            { id: 1005, authorId: 6, caption: "Bienvenue sur NGoma 👋", videoPath: "", time: now - 180000000, edited: false, likes: [2, 3] }
+        ]
+    }
+    property var comments: {
+        var now = Date.now()
+        return [
+            { id: 2001, postId: 1001, authorId: 3, text: "Bravo, très clair !", time: now - 3000000, parentId: 0, edited: false, deleted: false, likes: [] },
+            { id: 2002, postId: 1001, authorId: 4, text: "Merci pour le partage 🙏", time: now - 2800000, parentId: 0, edited: false, deleted: false, likes: [] },
+            { id: 2003, postId: 1001, authorId: 2, text: "Merci Kofi !", time: now - 2500000, parentId: 2001, edited: false, deleted: false, likes: [] }
+        ]
+    }
+    property int nextPostId: 3000
+
+    function feed() { return posts.slice().sort(function (a, b) { return b.time - a.time }) }
+    function userPosts(userId) { return feed().filter(function (p) { return p.authorId === userId }) }
+    function publish(caption, videoPath) {
+        posts = posts.concat([{ id: nextPostId++, authorId: me, caption: caption.trim(), videoPath: videoPath || "", time: Date.now(), edited: false, likes: [] }])
+    }
+    function _patchPost(id, f) { posts = posts.map(function (p) { return p.id === id ? f(p) : p }) }
+    function editPost(id, caption) {
+        _patchPost(id, function (p) { return Object.assign({}, p, { caption: caption.trim(), edited: true }) })
+    }
+    function removePost(id) {
+        posts = posts.filter(function (p) { return p.id !== id })
+        comments = comments.filter(function (c) { return c.postId !== id })
+    }
+    function _toggle(list, id) {
+        return list.indexOf(id) >= 0 ? list.filter(function (x) { return x !== id }) : list.concat([id])
+    }
+    // Aime ou n'aime plus (bascule) pour l'utilisateur connecté
+    function toggleLike(id) { _patchPost(id, function (p) { return Object.assign({}, p, { likes: _toggle(p.likes, me) }) }) }
+
+    function commentsOf(postId) {
+        return comments.filter(function (c) { return c.postId === postId }).sort(function (a, b) { return a.time - b.time })
+    }
+    function commentCount(postId) {
+        return comments.filter(function (c) { return c.postId === postId && !c.deleted }).length
+    }
+    function addComment(postId, text, parentId) {
+        comments = comments.concat([{ id: nextPostId++, postId: postId, authorId: me, text: text.trim(), time: Date.now(),
+                                      parentId: parentId || 0, edited: false, deleted: false, likes: [] }])
+    }
+    function _patchComment(id, f) { comments = comments.map(function (c) { return c.id === id ? f(c) : c }) }
+    function editComment(id, text) { _patchComment(id, function (c) { return Object.assign({}, c, { text: text.trim(), edited: true }) }) }
+    function removeComment(id) { _patchComment(id, function (c) { return Object.assign({}, c, { text: "", deleted: true }) }) }
+    function toggleCommentLike(id) { _patchComment(id, function (c) { return Object.assign({}, c, { likes: _toggle(c.likes, me) }) }) }
 
     // Réponse simulée d'un interlocuteur
     property Timer peerTimer: Timer {

@@ -28,6 +28,12 @@ qt_add_qml_module(appNGoma
         qml/HomeScreen.qml
         qml/ConversationView.qml
         qml/Avatar.qml
+        qml/AppShell.qml
+        qml/VideosScreen.qml
+        qml/PeopleScreen.qml
+        qml/ProfileScreen.qml
+        qml/PostMiniature.qml
+        qml/CommentLine.qml
     SOURCES
         src/models.h
         src/models.cpp
@@ -51,6 +57,8 @@ FetchContent_Declare(
     GIT_TAG v3.11.2
 )
 FetchContent_MakeAvailable(nlohmann_json)
+
+qt_add_resources(appNGoma "icon" PREFIX "/" FILES ngoma.png)
 
 target_include_directories(appNGoma PRIVATE src)
 

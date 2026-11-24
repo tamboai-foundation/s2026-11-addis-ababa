@@ -25,5 +25,5 @@ Window {
 
     Component { id: splash; SplashScreen {} }
     Component { id: auth; AuthScreen { onDone: root.phase = "home" } }
-    Component { id: home; HomeScreen { onLogout: { MockBridge.logout(); root.phase = "auth" } } }
+    Component { id: home; AppShell { onLogout: { MockBridge.logout(); root.phase = "auth" } } }
 }
